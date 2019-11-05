@@ -32,7 +32,7 @@ namespace Moodle.Api.Controllers
             WriteProgress = writeProgress;
         }
 
-        protected TModel Post<TModel, TInputModel> (string functionName,TInputModel inputModel)
+        protected async Task<TModel> Post<TModel, TInputModel>(string functionName, TInputModel inputModel)
             where TInputModel:IModel
         {
             try
@@ -40,8 +40,8 @@ namespace Moodle.Api.Controllers
 
                 var inputPairs = inputModel.ToKeyValuePairs();
                 var inputContent = new FormUrlEncodedContent(inputPairs); 
-                var response = moodleClient.PostAsync("server.php?wstoken=" + _token + "&moodlewsrestformat=json&wsfunction=" + functionName,inputContent).Result;
-                var responseText = response.Content.ReadAsStringAsync().Result;
+                var response = await moodleClient.PostAsync("server.php?wstoken=" + _token + "&moodlewsrestformat=json&wsfunction=" + functionName,inputContent).ConfigureAwait(false);
+                var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     if (responseText.Contains("\"exception\":"))
@@ -56,18 +56,18 @@ namespace Moodle.Api.Controllers
             catch (Exception ex)
             {
                 WriteProgress("~~~~~Error~~~~~\nFunction: " + functionName + "\n~~~~~Exception~~~~~\n" + ex.ToString().Replace("\\n","\n") + "\n~~~~~~~~~~~~~~~");
-                return default(TModel);
+                return default;
             }
         }
-        protected void Post<TInputModel>(string functionName, TInputModel inputModel)
+        protected async Task Post<TInputModel>(string functionName, TInputModel inputModel)
             where TInputModel : IModel
         {
             try
             {
                 var inputPairs = inputModel.ToKeyValuePairs();
                 var inputContent = new FormUrlEncodedContent(inputPairs);
-                var response = moodleClient.PostAsync("server.php?wstoken=" + _token + "&moodlewsrestformat=json&wsfunction=" + functionName, inputContent).Result;
-                var responseText = response.Content.ReadAsStringAsync().Result;
+                var response = await moodleClient.PostAsync("server.php?wstoken=" + _token + "&moodlewsrestformat=json&wsfunction=" + functionName, inputContent).ConfigureAwait(false);
+                var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK || responseText.Contains("\"exception\":"))
                     throw new InvalidOperationException(responseText);
             }
@@ -76,12 +76,12 @@ namespace Moodle.Api.Controllers
                 WriteProgress("~~~~~Error~~~~~\nFunction: " + functionName + "\n~~~~~Exception~~~~~\n" + ex.ToString() + "\n~~~~~~~~~~~~~~~");
             }
         }
-        protected TModel Post<TModel>(string functionName)
+        protected async Task<TModel> Post<TModel>(string functionName)
         {
             try
             {
-                var response = moodleClient.PostAsync("&wsfunction=" + functionName, null).Result;
-                var responseText = response.Content.ReadAsStringAsync().Result;
+                var response = await moodleClient.PostAsync("&wsfunction=" + functionName, null).ConfigureAwait(false);
+                var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     if (responseText.Contains("\"exception\":"))
@@ -96,7 +96,7 @@ namespace Moodle.Api.Controllers
             catch (Exception ex)
             {
                 WriteProgress("~~~~~Error~~~~~\nFunction: " + functionName + "\n~~~~~Exception~~~~~\n" + ex.ToString() + "\n~~~~~~~~~~~~~~~");
-                return default(TModel);
+                return default;
             }
         }
      
